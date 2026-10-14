@@ -50,7 +50,7 @@ async function sha256(bytes: Uint8Array) {
 }
 
 const MODULES = [
-  { name: "Pokémon data", icon: Sparkles, status: "Profile needed" },
+  { name: "Pokémon data", icon: Sparkles, status: "Experimental · manual offset" },
   { name: "Sprites & colors", icon: ImageIcon, status: "Preview planned" },
   { name: "Maps & events", icon: Map, status: "Profile needed" },
   { name: "Trainers", icon: Swords, status: "Profile needed" },
