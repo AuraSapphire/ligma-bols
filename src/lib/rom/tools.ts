@@ -20,7 +20,7 @@ export function findBytes(haystack: Uint8Array, needle: Uint8Array, startAt = 0,
   for (let i = start; i <= haystack.length - needle.length && found.length < limit; i++) {
     let ok = true;
     for (let j = 0; j < needle.length; j++) if (haystack[i + j] !== needle[j]) { ok = false; break; }
-    if (ok) i++, found.push(i - 1);
+    if (ok) found.push(i);
   }
   return found;
 }
