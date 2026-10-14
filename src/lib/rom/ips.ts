@@ -60,6 +60,7 @@ export function createIpsPatch(original: Uint8Array, modified: Uint8Array): Uint
     if (i < original.length && original[i] === modified[i]) { i++; continue; }
     const start = i;
     while (i < modified.length && (i >= original.length || original[i] !== modified[i]) && i - start < 0xffff) i++;
+    if (start > 0xffffff) throw new Error("IPS cannot encode changes at offsets above 0xFFFFFF (16 MiB range).");
     put24(out, start);
     const length = i - start;
     out.push((length >>> 8) & 255, length & 255);
