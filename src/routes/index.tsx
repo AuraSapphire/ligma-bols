@@ -14,6 +14,7 @@ import { HeaderInspector } from "@/components/forge/HeaderInspector";
 import { parseHeader, validate, type GbaHeader, type Warning } from "@/lib/rom/header";
 import { makeDemoBytes } from "@/lib/rom/demo";
 import { applyIpsPatch, createIpsPatch } from "@/lib/rom/ips";
+import { applyBpsPatch } from "@/lib/rom/bps";
 import { compareBytes, findBytes, findFreeSpace, identifyGameCode, parseHexPattern } from "@/lib/rom/tools";
 
 export const Route = createFileRoute("/")({
@@ -254,9 +255,10 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
     setPatchError(null);
     setPatchStatus(null);
     try {
-      if (file.size > 16 * 1024 * 1024) throw new Error("Patch file is unexpectedly large (over 16 MiB).");
+      if (file.size > 64 * 1024 * 1024) throw new Error("Patch file is unexpectedly large (over 64 MiB).");
       const patch = new Uint8Array(await file.arrayBuffer());
-      const result = applyIpsPatch(working, patch);
+      const isBps = file.name.toLowerCase().endsWith(".bps");
+      const result = isBps ? applyBpsPatch(working, patch) : applyIpsPatch(working, patch);
       pushWorking(result);
       setPatchName(file.name);
       setPatchStatus(`Applied ${file.name}. Your original file is untouched. Review the result, then export a new ROM copy.`);
@@ -349,16 +351,16 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
       </div>}
 
       {activeTool === "patch" && <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-6">
-        <div><h3 className="text-lg font-bold">Patch your working copy</h3><p className="mt-1 text-sm text-muted-foreground">An IPS patch is a small file containing changes to another file. We keep your original ROM unchanged and apply the patch to a separate copy.</p></div>
+        <div><h3 className="text-lg font-bold">Patch your working copy</h3><p className="mt-1 text-sm text-muted-foreground">An IPS or BPS patch contains changes to another file. BPS patches also verify source, target, and patch checksums. We keep your original ROM unchanged and apply the patch to a separate copy.</p></div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => patchInput.current?.click()}><Puzzle className="mr-1 h-4 w-4" /> Choose IPS patch</Button>
+          <Button onClick={() => patchInput.current?.click()}><Puzzle className="mr-1 h-4 w-4" /> Choose IPS or BPS patch</Button>
           <Button variant="outline" disabled={!dirty} onClick={exportPatch}><Download className="mr-1 h-4 w-4" /> Create IPS from my edits</Button>
-          <input ref={patchInput} type="file" accept=".ips" className="hidden" aria-label="Choose IPS patch" onChange={(e) => { const f = e.target.files?.[0]; if (f) void applyPatchFile(f); e.currentTarget.value = ""; }} />
+          <input ref={patchInput} type="file" accept=".ips,.bps" className="hidden" aria-label="Choose IPS patch" onChange={(e) => { const f = e.target.files?.[0]; if (f) void applyPatchFile(f); e.currentTarget.value = ""; }} />
         </div>
         {patchName && <p className="text-xs text-muted-foreground">Last patch: {patchName}</p>}
         {patchStatus && <p role="status" className="rounded-lg border border-lime/30 bg-lime/5 p-3 text-sm text-lime">{patchStatus}</p>}
         {patchError && <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{patchError}</p>}
-        <div className="rounded-lg border border-warn/40 bg-warn/5 p-3 text-xs text-muted-foreground"><AlertTriangle className="mr-1 inline h-4 w-4 text-warn" />Always verify that a patch matches your exact game and region. IPS patches cannot address bytes above the 16 MiB offset range. Export creates a new file; it never overwrites your original.</div>
+        <div className="rounded-lg border border-warn/40 bg-warn/5 p-3 text-xs text-muted-foreground"><AlertTriangle className="mr-1 inline h-4 w-4 text-warn" />Always verify that a patch matches your exact game and region. Only apply patches that match your exact game and region. IPS and BPS formats are supported for applying; creating a patch currently exports IPS. Export creates a new file; it never overwrites your original.</div>
       </section>}
 
       {activeTool === "search" && <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-6">
