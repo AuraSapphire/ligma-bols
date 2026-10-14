@@ -15,7 +15,7 @@ const SPECIES_FIELDS: Field[] = [
   { key: "type2", label: "Type ID 2", offset: 7, max: 255 },
   { key: "catchRate", label: "Catch rate", offset: 8, max: 255 },
   { key: "expYield", label: "Base EXP yield", offset: 9, max: 255 },
-  { key: "evYieldPacked", label: "EV yield (packed hex)", offset: 10, width: 2, max: 65535, help: "Two little-endian bytes containing six 2-bit EV yields. Enter decimal." },
+  { key: "evYieldPacked", label: "EV yield packed (decimal)", offset: 10, width: 2, max: 65535, help: "Two little-endian bytes containing six 2-bit EV yields. Enter decimal." },
   { key: "itemCommon", label: "Common held item ID", offset: 12, width: 2, max: 65535 },
   { key: "itemRare", label: "Rare held item ID", offset: 14, width: 2, max: 65535 },
   { key: "genderRatio", label: "Gender ratio", offset: 16, max: 255 },
@@ -38,10 +38,10 @@ const MOVE_FIELDS: Field[] = [
   { key: "secondaryEffectChance", label: "Secondary effect chance", offset: 5, max: 255 },
   { key: "target", label: "Target flags / ID", offset: 6, max: 255 },
   { key: "priority", label: "Priority (signed)", offset: 7, min: -128, max: 127, signed: true },
-  { key: "flags", label: "Move flags (32-bit)", offset: 8, width: 4, max: 4294967295, help: "Enter a decimal unsigned 32-bit value. Flags vary by game engine." },
+  { key: "flags", label: "Move flags", offset: 8, max: 255, help: "Flags vary by game engine." },
 ];
 const SPECIES_SIZE = 26;
-const MOVE_SIZE = 12;
+const MOVE_SIZE = 9;
 
 function readValue(bytes: Uint8Array, start: number, field: Field): number {
   const width = field.width ?? 1;
@@ -126,7 +126,7 @@ export function Gen3DataEditor({ bytes, disabled, onApply }: {
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant={kind === "species" ? "default" : "outline"} onClick={() => { setKind("species"); setValues({}); }}>Species stats · 26 bytes</Button>
-        <Button variant={kind === "move" ? "default" : "outline"} onClick={() => { setKind("move"); setValues({}); }}>Battle move · 12 bytes</Button>
+        <Button variant={kind === "move" ? "default" : "outline"} onClick={() => { setKind("move"); setValues({}); }}>Battle move · 9 bytes</Button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1 text-xs text-muted-foreground"><span>Table base offset (hex)</span><Input value={baseOffset} onChange={(e) => setBaseOffset(e.target.value)} placeholder="e.g. 0x123456" className="font-mono" /></label>
