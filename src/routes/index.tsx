@@ -238,6 +238,8 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
   const [freeRanges, setFreeRanges] = useState<ReturnType<typeof findFreeSpace> | null>(null);
   const [compareResult, setCompareResult] = useState<ReturnType<typeof compareBytes> | null>(null);
   const [activeTool, setActiveTool] = useState("overview");
+  const [overviewTab, setOverviewTab] = useState("header");
+  const [hexJumpOffset, setHexJumpOffset] = useState(0);
   const patchInput = useRef<HTMLInputElement>(null);
   const dirty = working.length !== s.bytes.length || working.some((b, i) => b !== s.bytes[i]);
   const header = parseHeader(working);
@@ -343,10 +345,10 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
           const c = w.severity === "error" ? "text-destructive" : w.severity === "warning" ? "text-warn" : "text-primary";
           return <li key={i} className="flex items-start gap-2 text-xs"><Icon className={`mt-0.5 h-4 w-4 shrink-0 ${c}`} />{w.message}</li>;
         })}</ul> : <div className="rounded-xl border bg-card p-4 text-sm text-lime"><CheckCircle2 className="mr-2 inline h-4 w-4" />No validation warnings detected.</div>}
-        <Tabs defaultValue={header ? "header" : "hex"}>
+        <Tabs value={overviewTab} onValueChange={setOverviewTab}>
           <TabsList><TabsTrigger value="header">Header details</TabsTrigger><TabsTrigger value="hex">Hex viewer</TabsTrigger></TabsList>
           <TabsContent value="header">{header ? <HeaderInspector h={header} /> : <div className="rounded-lg border bg-panel p-5 text-sm text-muted-foreground">This file is too small to contain a full GBA header. Raw bytes remain available below.</div>}</TabsContent>
-          <TabsContent value="hex" className="h-[520px]"><HexViewer bytes={working} /></TabsContent>
+          <TabsContent value="hex" className="h-[520px]"><HexViewer bytes={working} initialOffset={hexJumpOffset} /></TabsContent>
         </Tabs>
       </div>}
 
@@ -370,7 +372,7 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
           <Button type="submit"><Search className="mr-1 h-4 w-4" /> Find bytes</Button>
         </form>
         {searchError && <p role="status" className="text-sm text-warn">{searchError}</p>}
-        {searchResults && searchResults.length > 0 && <div className="rounded-lg border p-3"><p className="mb-2 text-sm font-semibold">{searchResults.length} match{searchResults.length === 1 ? "" : "es"}{searchResults.length === 100 ? " (showing first 100)" : ""}</p><div className="flex flex-wrap gap-2">{searchResults.map((offset) => <Button key={offset} variant="outline" size="sm" className="font-mono" onClick={() => { setActiveTool("overview"); }}>{`0x${offset.toString(16).toUpperCase()}`}</Button>)}</div><p className="mt-2 text-xs text-muted-foreground">Offsets are shown in hexadecimal. Open the hex viewer and use its “Go to” field to inspect a match.</p></div>}
+        {searchResults && searchResults.length > 0 && <div className="rounded-lg border p-3"><p className="mb-2 text-sm font-semibold">{searchResults.length} match{searchResults.length === 1 ? "" : "es"}{searchResults.length === 100 ? " (showing first 100)" : ""}</p><div className="flex flex-wrap gap-2">{searchResults.map((offset) => <Button key={offset} variant="outline" size="sm" className="font-mono" onClick={() => { setHexJumpOffset(offset); setOverviewTab("hex"); setActiveTool("overview"); }}>{`0x${offset.toString(16).toUpperCase()}`}</Button>)}</div><p className="mt-2 text-xs text-muted-foreground">Offsets are shown in hexadecimal. Open the hex viewer and use its “Go to” field to inspect a match.</p></div>}
       </section>}
 
       {activeTool === "hex-edit" && <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-6">
