@@ -1,29 +1,46 @@
-# PokéForge Studio — Phase 1 (ROM Inspector)
+# PokéForge Studio — beginner-friendly GBA ROM workbench
 
-A browser-only, read-only Game Boy Advance ROM inspector for beginner ROM hackers.
+PokéForge Studio is a browser-based workbench for inspecting and safely experimenting with Game Boy Advance ROM files. It is an early build: the binary tools are real, but it is **not yet a complete Pokémon game-data editor**.
 
-## Privacy
-ROM files are read with `File.arrayBuffer()` into memory. Nothing is uploaded, sent to a server, or persisted (no localStorage/IndexedDB). Clearing the file or closing the tab discards it.
+## Privacy and safety
+- Files are read in your browser; ROM bytes are not uploaded to a server by these tools.
+- The source file is kept unchanged in memory. Patch operations modify a separate working copy.
+- Export downloads a new `.gba` file; it never silently overwrites your original.
+- Use only ROM files you are legally entitled to use. The app does not provide ROM downloads.
+- A run of `00` or `FF` bytes is only a free-space *heuristic*, not proof that a region is safe to overwrite.
 
-## Features
-- Drag/drop or file picker (.gba/.bin, max 64 MiB)
-- File name, size, SHA-256 via Web Crypto (`crypto.subtle.digest`)
-- Header inspector (0x00–0xBD): entry point, Nintendo logo comparison against the GBATEK reference bitmap, title, game code, maker code, fixed value (0x96), unit code, device type, version, header checksum
-- Checksum: `(-sum(bytes 0xA0..0xBC) - 0x19) & 0xFF`
-- Paged hex viewer (512 bytes per page, 16 bytes/row) with jump-to-offset — only the current page is rendered
-- Validation warnings, empty/loading/error states
-- Demo mode: 64 KiB of synthetic bytes, title `DEMOSYNTHETC`, blank logo — clearly not a ROM
-- Planned module placeholders: Pokémon Data, Sprites, Maps, Trainers, Encounters, Text & Scripts
+## Working features
+- Drag-and-drop and file picker for `.gba` / `.bin` files (64 MiB safety limit).
+- SHA-256 fingerprint, GBA header fields, Nintendo logo comparison, header checksum calculation, and validation warnings.
+- Paged hex viewer with offset navigation.
+- Friendly dashboard with ROM checkup, patching, search, and utility panels.
+- Apply IPS patches to a working copy, with record and size validation.
+- Create an IPS patch between the original bytes and the current working copy.
+- Export the current working copy as a new `.gba` file.
+- Undo the most recent patch operation.
+- Search for byte patterns in hexadecimal, including overlapping matches.
+- Compare the current working copy against another file.
+- Find long `00` / `FF` runs and display their offsets and lengths.
+- Basic game-code labels for selected known Pokémon GBA releases; unknown codes remain explicitly unknown.
+- Synthetic demo mode for testing the interface without a real game.
 
-## Architecture
-- `src/lib/rom/header.ts` — pure parsing/validation (no DOM, unit tested)
-- `src/lib/rom/demo.ts` — synthetic demo byte generator
-- `src/components/forge/` — `HeaderInspector`, `HexViewer`
-- `src/routes/index.tsx` — studio shell, session state (React `useState` only)
-- Tests: `bunx vitest run` (`src/lib/rom/header.test.ts`)
+## Not implemented yet
+- Reliable, verified profile support for reading/writing Pokémon species, moves, items, trainers, wild encounters, evolutions, shops, maps, scripts, and text pointers across multiple ROM revisions.
+- Safe pointer allocation, compressed asset repacking, and writing sprite/palette changes back into real games.
+- BPS patch support.
+- Persistent project files and multi-step undo history.
+- A real-game compatibility suite across verified clean ROM revisions.
 
-## Current limitations
-- Read-only; no writing, patching, or export
-- Does not identify games/versions or parse any Pokémon-specific data
-- Whole file is held in memory (fine for ≤32 MiB GBA ROMs)
-- Hex viewer has no search or selection yet
+The game-specific editors must use verified per-game/per-revision layouts; blindly writing guessed offsets can corrupt a ROM. Until a matching profile exists, these features should remain marked as limited rather than pretend to edit the game correctly.
+
+## Development
+- Install dependencies with your preferred package manager, then run `npm run dev`.
+- Run tests with `npm test`.
+- Build with `npm run build`.
+
+Main modules:
+- `src/lib/rom/header.ts`: GBA header parsing and validation.
+- `src/lib/rom/ips.ts`: pure IPS patch apply/create helpers.
+- `src/lib/rom/tools.ts`: game-code labels, byte search, file comparison, free-space heuristic, hex parsing.
+- `src/routes/index.tsx`: beginner-oriented UI and local working-copy workflow.
+- `src/lib/rom/*.test.ts`: unit tests for binary helpers.
