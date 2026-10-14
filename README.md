@@ -1,13 +1,29 @@
-# PokéForge Studio
+# PokéForge Studio — Phase 1 (ROM Inspector)
 
-Browser-based Pokémon GBA ROM hacking studio prototype. Phase 1 is a read-only ROM inspector.
+A browser-only, read-only Game Boy Advance ROM inspector for beginner ROM hackers.
+
+## Privacy
+ROM files are read with `File.arrayBuffer()` into memory. Nothing is uploaded, sent to a server, or persisted (no localStorage/IndexedDB). Clearing the file or closing the tab discards it.
 
 ## Features
-- Load `.gba` or `.bin` files locally in the browser
-- Inspect GBA header metadata and checksum
-- Paged hex viewer and SHA-256 fingerprint
-- Synthetic demo data
+- Drag/drop or file picker (.gba/.bin, max 64 MiB)
+- File name, size, SHA-256 via Web Crypto (`crypto.subtle.digest`)
+- Header inspector (0x00–0xBD): entry point, Nintendo logo comparison against the GBATEK reference bitmap, title, game code, maker code, fixed value (0x96), unit code, device type, version, header checksum
+- Checksum: `(-sum(bytes 0xA0..0xBC) - 0x19) & 0xFF`
+- Paged hex viewer (512 bytes per page, 16 bytes/row) with jump-to-offset — only the current page is rendered
+- Validation warnings, empty/loading/error states
+- Demo mode: 64 KiB of synthetic bytes, title `DEMOSYNTHETC`, blank logo — clearly not a ROM
+- Planned module placeholders: Pokémon Data, Sprites, Maps, Trainers, Encounters, Text & Scripts
 
-ROM bytes are processed locally in the browser and are not uploaded by the app.
+## Architecture
+- `src/lib/rom/header.ts` — pure parsing/validation (no DOM, unit tested)
+- `src/lib/rom/demo.ts` — synthetic demo byte generator
+- `src/components/forge/` — `HeaderInspector`, `HexViewer`
+- `src/routes/index.tsx` — studio shell, session state (React `useState` only)
+- Tests: `bunx vitest run` (`src/lib/rom/header.test.ts`)
 
-Editing and ROM export are not implemented yet. See the source tree for the current implementation.
+## Current limitations
+- Read-only; no writing, patching, or export
+- Does not identify games/versions or parse any Pokémon-specific data
+- Whole file is held in memory (fine for ≤32 MiB GBA ROMs)
+- Hex viewer has no search or selection yet
