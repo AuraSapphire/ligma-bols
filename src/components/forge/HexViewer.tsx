@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,9 @@ const ROW = 16;
 const ROWS_PER_PAGE = 32;
 const PAGE = ROW * ROWS_PER_PAGE;
 
-export function HexViewer({ bytes }: { bytes: Uint8Array }) {
-  const [page, setPage] = useState(0);
+export function HexViewer({ bytes, initialOffset = 0 }: { bytes: Uint8Array; initialOffset?: number }) {
+  const [page, setPage] = useState(Math.floor(Math.max(0, initialOffset) / PAGE));
+  useEffect(() => { setPage(Math.floor(Math.max(0, Math.min(initialOffset, Math.max(0, bytes.length - 1))) / PAGE)); }, [initialOffset, bytes.length]);
   const [jump, setJump] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const pages = Math.max(1, Math.ceil(bytes.length / PAGE));
