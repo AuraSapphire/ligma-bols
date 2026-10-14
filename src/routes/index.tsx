@@ -63,7 +63,7 @@ function fmtSize(n: number) {
 }
 
 function downloadBytes(bytes: Uint8Array, filename: string, type = "application/octet-stream") {
-  const blob = new Blob([bytes], { type });
+  const blob = new Blob([bytes.slice().buffer as ArrayBuffer], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
