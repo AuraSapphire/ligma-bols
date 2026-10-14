@@ -14,6 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Update npm (Node 22 ships npm 10, which can crash resolving this dependency tree)
+        run: npm install --global npm@11.19.1
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Run tests
