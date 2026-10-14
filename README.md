@@ -14,10 +14,11 @@ PokéForge Studio is a browser-based workbench for inspecting and safely experim
 - SHA-256 fingerprint, GBA header fields, Nintendo logo comparison, header checksum calculation, and validation warnings.
 - Paged hex viewer with offset navigation.
 - Friendly dashboard with ROM checkup, patching, search, and utility panels.
-- Apply IPS patches to a working copy, with record and size validation.
+- Apply IPS and BPS patches to a working copy; BPS checks source, target, and patch CRC-32 values.
 - Create an IPS patch between the original bytes and the current working copy.
 - Export the current working copy as a new `.gba` file.
-- Undo the most recent patch operation.
+- Edit a single byte at a chosen hex offset in the working copy, with input validation and undo.
+- Undo the most recent patch or byte-edit operation.
 - Search for byte patterns in hexadecimal, including overlapping matches.
 - Compare the current working copy against another file.
 - Find long `00` / `FF` runs and display their offsets and lengths.
@@ -27,7 +28,7 @@ PokéForge Studio is a browser-based workbench for inspecting and safely experim
 ## Not implemented yet
 - Reliable, verified profile support for reading/writing Pokémon species, moves, items, trainers, wild encounters, evolutions, shops, maps, scripts, and text pointers across multiple ROM revisions.
 - Safe pointer allocation, compressed asset repacking, and writing sprite/palette changes back into real games.
-- BPS patch support.
+- Creating BPS patches (application is supported; patch creation exports IPS).
 - Persistent project files and multi-step undo history.
 - A real-game compatibility suite across verified clean ROM revisions.
 
