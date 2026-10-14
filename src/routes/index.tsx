@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { HexViewer } from "@/components/forge/HexViewer";
 import { HeaderInspector } from "@/components/forge/HeaderInspector";
+import { Gen3DataEditor } from "@/components/forge/Gen3DataEditor";
 import { parseHeader, validate, type GbaHeader, type Warning } from "@/lib/rom/header";
 import { makeDemoBytes } from "@/lib/rom/demo";
 import { applyIpsPatch, createIpsPatch } from "@/lib/rom/ips";
@@ -331,6 +332,7 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
           { id: "patch", icon: Puzzle, title: "Apply an IPS patch", body: "Patch your working copy safely." },
           { id: "search", icon: Search, title: "Find bytes", body: "Search for a byte pattern." },
           { id: "hex-edit", icon: Pencil, title: "Edit a byte", body: "Change one byte in your working copy." },
+          { id: "data-editor", icon: Sparkles, title: "Pokémon data", body: "Edit Gen III species stats and move fields." },
           { id: "tools", icon: Wrench, title: "ROM tools", body: "Compare files and find blank areas." },
         ].map(({ id, icon: Icon, title, body }) => (
           <button key={id} onClick={() => setActiveTool(id)} className={`rounded-xl border p-4 text-left transition-colors hover:border-primary/60 ${activeTool === id ? "border-primary bg-primary/5" : "bg-card"}`}>
@@ -402,6 +404,8 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
         <div className="rounded-lg border border-warn/40 bg-warn/5 p-3 text-xs text-muted-foreground"><AlertTriangle className="mr-1 inline h-4 w-4 text-warn" />Raw byte editing is powerful but can break a ROM if you change the wrong offset. This tool does not know what every byte means. Use undo or reopen the original if a change causes problems.</div>
       </section>}
 
+      {activeTool === "data-editor" && <Gen3DataEditor bytes={working} disabled={s.demo} onApply={(next, description) => { pushWorking(next); setPatchError(null); setPatchStatus(description); }} />}
+
       {activeTool === "tools" && <section className="space-y-5 rounded-xl border bg-card p-4 sm:p-6">
         <div><h3 className="text-lg font-bold">ROM utility toolbox</h3><p className="mt-1 text-sm text-muted-foreground">Helpful diagnostics. Blank areas are only guesses—not guaranteed safe places to write game data.</p></div>
         <div className="space-y-2"><h4 className="text-sm font-semibold">Find long blank areas</h4><form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); const n = Number(minRun); if (!Number.isSafeInteger(n) || n < 16 || n > working.length) { setFreeRanges([]); return; } setFreeRanges(findFreeSpace(working, n, 100)); }}><Input value={minRun} onChange={(e) => setMinRun(e.target.value)} type="number" min="16" max={working.length} className="max-w-48" aria-label="Minimum blank run length in bytes" /><Button type="submit">Find blank areas</Button></form>
@@ -413,7 +417,7 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
 
       <section className="rounded-xl border bg-panel/70 p-4">
         <h3 className="text-sm font-semibold"><Info className="mr-2 inline h-4 w-4 text-primary" />What this build can do</h3>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Real features now include ROM header inspection, validation, hex viewing, local byte search, blank-run heuristics, byte comparison, IPS patch apply/create, undo for the last operation, and exporting a separate .gba file. Pokémon stats, trainer parties, maps, wild encounters, and pointer-based game data still need verified per-game profiles; those are not falsely presented as working editors yet.</p>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Real features now include ROM header inspection, validation, hex viewing, local byte search, blank-run heuristics, byte comparison, IPS/BPS patching, undo, and exporting a separate .gba file. The experimental Gen III species/move editor can edit a manually located record in memory, but it does not yet identify the correct table offsets for each game/revision. Trainers, maps, wild encounters, and pointer-based game data still need verified per-game profiles.</p>
       </section>
     </div>
   );
