@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 import {
   AlertTriangle, Binary, CircleAlert, FileUp, FlaskConical, Info, Lock, Loader2,
-  Search, Download, Undo2, ShieldCheck, Wrench, FileDiff, Cpu, Sparkles, Image as ImageIcon,
+  Search, Download, Undo2, ShieldCheck, Wrench, FileDiff, Cpu, Sparkles, Image as ImageIcon, Pencil,
   Map, Swords, Trees, MessageSquareText, Puzzle, CheckCircle2, BookOpen, RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -230,6 +230,9 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
   const [searchText, setSearchText] = useState("08 00 00 00");
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<number[] | null>(null);
+  const [editOffset, setEditOffset] = useState("0xA0");
+  const [editValue, setEditValue] = useState("00");
+  const [editError, setEditError] = useState<string | null>(null);
   const [minRun, setMinRun] = useState("1024");
   const [freeRanges, setFreeRanges] = useState<ReturnType<typeof findFreeSpace> | null>(null);
   const [compareResult, setCompareResult] = useState<ReturnType<typeof compareBytes> | null>(null);
@@ -323,6 +326,7 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
           { id: "overview", icon: ShieldCheck, title: "ROM checkup", body: "Read header and validation warnings." },
           { id: "patch", icon: Puzzle, title: "Apply an IPS patch", body: "Patch your working copy safely." },
           { id: "search", icon: Search, title: "Find bytes", body: "Search for a byte pattern." },
+          { id: "hex-edit", icon: Pencil, title: "Edit a byte", body: "Change one byte in your working copy." },
           { id: "tools", icon: Wrench, title: "ROM tools", body: "Compare files and find blank areas." },
         ].map(({ id, icon: Icon, title, body }) => (
           <button key={id} onClick={() => setActiveTool(id)} className={`rounded-xl border p-4 text-left transition-colors hover:border-primary/60 ${activeTool === id ? "border-primary bg-primary/5" : "bg-card"}`}>
@@ -365,6 +369,33 @@ function Loaded({ s, onClear }: { s: Session; onClear: () => void }) {
         </form>
         {searchError && <p role="status" className="text-sm text-warn">{searchError}</p>}
         {searchResults && searchResults.length > 0 && <div className="rounded-lg border p-3"><p className="mb-2 text-sm font-semibold">{searchResults.length} match{searchResults.length === 1 ? "" : "es"}{searchResults.length === 100 ? " (showing first 100)" : ""}</p><div className="flex flex-wrap gap-2">{searchResults.map((offset) => <Button key={offset} variant="outline" size="sm" className="font-mono" onClick={() => { setActiveTool("overview"); }}>{`0x${offset.toString(16).toUpperCase()}`}</Button>)}</div><p className="mt-2 text-xs text-muted-foreground">Offsets are shown in hexadecimal. Open the hex viewer and use its “Go to” field to inspect a match.</p></div>}
+      </section>}
+
+      {activeTool === "hex-edit" && <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-6">
+        <div><h3 className="text-lg font-bold">Edit a byte</h3><p className="mt-1 text-sm text-muted-foreground">A byte is one tiny piece of file data, written as two hex digits (00–FF). This changes only the working copy in memory, never your original file.</p></div>
+        <form className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={(e) => {
+          e.preventDefault();
+          try {
+            const raw = editOffset.trim();
+            const offset = /^0x/i.test(raw) ? Number.parseInt(raw.slice(2), 16) : /^\d+$/.test(raw) ? Number(raw) : Number.parseInt(raw, 16);
+            if (!Number.isSafeInteger(offset) || offset < 0 || offset >= working.length) throw new Error(`Offset must be between 0 and 0x${(working.length - 1).toString(16).toUpperCase()}.`);
+            const v = editValue.trim().replace(/^0x/i, "");
+            if (!/^[\da-f]{1,2}$/i.test(v)) throw new Error("Enter a byte from 00 to FF.");
+            const next = working.slice();
+            const previous = next[offset];
+            next[offset] = Number.parseInt(v, 16);
+            pushWorking(next);
+            setEditError(null);
+            setPatchStatus(`Changed byte at 0x${offset.toString(16).toUpperCase()}: ${previous.toString(16).padStart(2,"0").toUpperCase()} → ${next[offset].toString(16).padStart(2,"0").toUpperCase()}.`);
+          } catch (e) { setEditError(e instanceof Error ? e.message : String(e)); }
+        }}>
+          <label className="space-y-1 text-xs text-muted-foreground"><span>File offset (hex)</span><Input value={editOffset} onChange={(e) => setEditOffset(e.target.value)} className="font-mono" placeholder="0xA0" aria-label="Byte offset" /></label>
+          <label className="space-y-1 text-xs text-muted-foreground"><span>New byte (00–FF)</span><Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="font-mono" placeholder="FF" aria-label="New byte value" maxLength={4} /></label>
+          <div className="flex items-end"><Button type="submit" className="w-full sm:w-auto"><Pencil className="mr-1 h-4 w-4" /> Change byte</Button></div>
+        </form>
+        {editError && <p role="alert" className="text-sm text-destructive">{editError}</p>}
+        {patchStatus && <p role="status" className="rounded-lg border border-lime/30 bg-lime/5 p-3 text-sm text-lime">{patchStatus}</p>}
+        <div className="rounded-lg border border-warn/40 bg-warn/5 p-3 text-xs text-muted-foreground"><AlertTriangle className="mr-1 inline h-4 w-4 text-warn" />Raw byte editing is powerful but can break a ROM if you change the wrong offset. This tool does not know what every byte means. Use undo or reopen the original if a change causes problems.</div>
       </section>}
 
       {activeTool === "tools" && <section className="space-y-5 rounded-xl border bg-card p-4 sm:p-6">
