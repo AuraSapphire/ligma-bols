@@ -18,6 +18,7 @@ PokéForge Studio is a browser-based workbench for inspecting and safely experim
 - Create an IPS patch between the original bytes and the current working copy.
 - Export the current working copy as a new `.gba` file.
 - Edit a single byte at a chosen hex offset in the working copy, with input validation and undo.
+- Experimental Gen III species (26-byte record) and battle-move (9-byte record) field editor. The user must supply a known table base offset; records are edited only in the in-memory working copy.
 - Undo the most recent patch or byte-edit operation.
 - Search for byte patterns in hexadecimal, including overlapping matches.
 - Compare the current working copy against another file.
@@ -26,7 +27,7 @@ PokéForge Studio is a browser-based workbench for inspecting and safely experim
 - Synthetic demo mode for testing the interface without a real game.
 
 ## Not implemented yet
-- Reliable, verified profile support for reading/writing Pokémon species, moves, items, trainers, wild encounters, evolutions, shops, maps, scripts, and text pointers across multiple ROM revisions.
+- Automatic verified table-offset detection for species/moves and reliable, verified profiles for items, trainers, wild encounters, evolutions, shops, maps, scripts, and text pointers across multiple ROM revisions. The species/move editor is experimental and requires manually locating the correct table first.
 - Safe pointer allocation, compressed asset repacking, and writing sprite/palette changes back into real games.
 - Creating BPS patches (application is supported; patch creation exports IPS).
 - Persistent project files and multi-step undo history.
